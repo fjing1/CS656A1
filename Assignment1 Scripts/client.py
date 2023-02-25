@@ -1,45 +1,48 @@
 import sys
 import socket
+import os
 
-if len(sys.argv) != 6:
-    print(f"Usage: {sys.argv[0]} <server_address> <n_port> <mode> <req_code> <file_received>")
-    sys.exit(1)
+def main():
+    # Check command line arguments
+    if len(sys.argv) != 5:
+        print(f"Usage: {sys.argv[0]} <server_address> <n_port> <mode> <req_code>")
+        return
 
-server_address = sys.argv[1]
-n_port = int(sys.argv[2])
-mode = sys.argv[3]
-req_code = int(sys.argv[4])
-file_received = sys.argv[5]
+    server_address = sys.argv[1]
+    n_port = int(sys.argv[2])
+    mode = sys.argv[3]
+    req_code = int(sys.argv[4])
 
-try:
-    # create socket for server
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.settimeout(1.0)
-    server_socket.connect((server_address, n_port))
-except socket.error as err:
-    print(f"Error connecting to server: {err}")
-    sys.exit(1)
+    # Create a TCP/IP socket
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-# send the request code to server
-server_socket.sendall(str(req_code).encode())
+    try:
+        # Connect to the server
+        server_address = (server_address, n_port)
+        sock.connect(server_address)
+        print(f"Connected to {server_address}")
 
-# receive the status message from server
-status_msg = server_socket.recv(1024).decode()
-if status_msg != "OK":
-    print(f"Server returned error: {status_msg}")
-    sys.exit(1)
+        if mode == "p":
+            # Passive mode: receive the file from the server
+            file_data = sock.recv(1024)
+            with open('received.txt', 'wb') as f:
+                f.write(file_data)
+            print("File received and saved as 'received.txt'")
 
-# send the mode to server
-server_socket.sendall(mode.encode())
+        elif mode == "a":
+            # Active mode: send the request code to the server and receive the file
+            sock.sendall(req_code.to_bytes(4, byteorder='big'))
 
-# receive the file content from server
-file_content = server_socket.recv(1024).decode()
+            # Receive the file from the server
+            file_data = sock.recv(1024)
+            with open('received.txt', 'wb') as f:
+                f.write(file_data)
+            print("File received and saved as 'received.txt'")
 
-# save the file to disk
-with open(file_received, "w") as f:
-    f.write(file_content)
+    finally:
+        # Clean up the socket
+        sock.close()
 
-# close the socket
-server_socket.close()
 
-print("File downloaded successfully!")
+if __name__ == '__main__':
+    main()

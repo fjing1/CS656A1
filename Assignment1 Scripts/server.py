@@ -1,54 +1,62 @@
-import socket
 import sys
+import socket
+import os
 
 def main():
-    # Check if all required command-line arguments are provided
+    # Check command line arguments
     if len(sys.argv) != 3:
-        print("Usage: python3 server.py <req_code> <file_to_send>")
+        print(f"Usage: {sys.argv[0]} <req_code> <file_to_send>")
         return
 
-    # Parse command-line arguments
     req_code = int(sys.argv[1])
-    file_path = sys.argv[2]
+    file_to_send = sys.argv[2]
 
-    # Load file contents
-    with open(file_path, 'rb') as f:
-        file_data = f.read()
+    # Create a TCP/IP socket
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    # Create a TCP socket
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # Bind the socket to a specific port
+    server_address = ('', 0)
+    sock.bind(server_address)
 
-    # Bind the socket to a specific port on localhost
-    s.bind(('localhost', 0))
-    port = s.getsockname()[1]
-    print("Server is listening on port", port)
+    # Print the port number the server is listening on
+    print(f"Starting up on {sock.getsockname()[1]}")
 
-    # Start listening for incoming connections
-    s.listen(1)
+    # Listen for incoming connections
+    sock.listen(1)
 
-    # Wait for a client to connect
-    conn, addr = s.accept()
-    print('Connection from', addr)
+    while True:
+        # Wait for a connection
+        print('Waiting for a connection...')
+        connection, client_address = sock.accept()
+        print(f"Accepted connection from {client_address}")
 
-    try:
-        # Receive the request code from the client
-        req_code_recv = conn.recv(1024)
-        if not req_code_recv:
-            print("Error: empty request code received")
-            return
+        try:
+            # Receive the request code from the client
+            data = connection.recv(4)
+            if not data:
+                print("No data received")
+                break
 
-        req_code_recv = int(req_code_recv.decode())
-        if req_code_recv != req_code:
-            print("Error: invalid request code received")
-            return
+            client_req_code = int.from_bytes(data, byteorder='big')
+            print(f"Received request code: {client_req_code}")
 
-        # Send the file contents to the client
-        conn.sendall(file_data)
-        print("File sent successfully")
+            if client_req_code != req_code:
+                print("Invalid request code")
+                connection.sendall(b"Invalid request code")
+                break
 
-    finally:
-        # Clean up the connection
-        conn.close()
+            # Send the file to the client
+            with open(file_to_send, 'rb') as f:
+                file_data = f.read()
+                connection.sendall(file_data)
+
+            print(f"File '{file_to_send}' sent to client")
+
+        finally:
+            # Clean up the connection
+            connection.close()
+            print("Connection closed\n")
+
 
 if __name__ == '__main__':
     main()
