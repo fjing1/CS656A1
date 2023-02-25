@@ -17,7 +17,7 @@
 #java server $1 "$2"
 
 #For Python implementation
-#python server.py $1 "$2"
+python server.py $4791 "sent.txt"
 
 #For Ruby implementation
 #ruby server.rb $1 "$2"

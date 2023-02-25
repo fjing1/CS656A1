@@ -20,7 +20,7 @@
 #java client $1 $2 "$3" $4 "$5"
 
 #For Python implementation
-#python client.py $1 $2 "$3" $4 "$5"
+python client.py $1 $4791 "$3" $4 "sent.txt"
 
 #For Ruby implementation
 #ruby client.rb $1 $2 "$3" $4 "$5"

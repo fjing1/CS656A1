@@ -1,30 +1,54 @@
 import socket
+import sys
 
+def main():
+    # Check if all required command-line arguments are provided
+    if len(sys.argv) != 3:
+        print("Usage: python3 server.py <req_code> <file_to_send>")
+        return
 
-HOST = 'localhost'
-PORT = 12000  #port used by the server
+    # Parse command-line arguments
+    req_code = int(sys.argv[1])
+    file_path = sys.argv[2]
 
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    s.bind(('', PORT))
-    print(s)
-    s.listen()
+    # Load file contents
+    with open(file_path, 'rb') as f:
+        file_data = f.read()
 
-    print(f'Server listening on{HOST}:{PORT}')
-    while True:
-        #accept a new client connection
-        conn, addr = s.accept()
+    # Create a TCP socket
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        with conn:
-            print(f'Connected by {addr}')
+    # Bind the socket to a specific port on localhost
+    s.bind(('localhost', 0))
+    port = s.getsockname()[1]
+    print("Server is listening on port", port)
 
-            while True:
-                #received Data
-                data = conn.recv(1024)
+    # Start listening for incoming connections
+    s.listen(1)
 
-                if not data:
-                    break
+    # Wait for a client to connect
+    conn, addr = s.accept()
+    print('Connection from', addr)
 
-                result = data.decode().upper()
+    try:
+        # Receive the request code from the client
+        req_code_recv = conn.recv(1024)
+        if not req_code_recv:
+            print("Error: empty request code received")
+            return
 
-                conn.sendall(result.encode())
-            print(f'Connection with {addr} closed')
+        req_code_recv = int(req_code_recv.decode())
+        if req_code_recv != req_code:
+            print("Error: invalid request code received")
+            return
+
+        # Send the file contents to the client
+        conn.sendall(file_data)
+        print("File sent successfully")
+
+    finally:
+        # Clean up the connection
+        conn.close()
+
+if __name__ == '__main__':
+    main()
