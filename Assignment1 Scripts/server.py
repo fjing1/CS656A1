@@ -20,10 +20,11 @@ def main():
         print("check number of argument failed")
         exit(-1)
     # check req_code be int
-    if not sys.argv[1].isdigit():
-        print("Error: req_code should be an integer.")
-        return
-    req_code = int(sys.argv[1])
+    try:
+        req_code = int(sys.argv[1])
+        # print("Error: req_code should be an integer.")
+    except ValueError:
+        print("Error:sys.argv[1]/<req_code> must be int")
 
     file_to_send = sys.argv[2]
     # udp socket

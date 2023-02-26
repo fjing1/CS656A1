@@ -13,16 +13,21 @@ def get_free_port():
 
 def main():
     # Check command line arguments
-    if len(sys.argv) != 5:
-        print(f"Usage: {sys.argv[0]} <server_addr> <n_port> <mode> <req_code>")
+    if len(sys.argv) != 6:
+        print("Error: client input sys argument is not 5")
         return
+    # type check parameters
+    try:
+        server_addr = str(sys.argv[1])
+        n_port = int(sys.argv[2])
+        mode = str(sys.argv[3])
+        req_code = int(sys.argv[4])
+        file_received = str(sys.argv[5])
+    except ValueError:
+        print('Error: check type of parameters')
 
-    server_addr = sys.argv[1]
-    n_port = int(sys.argv[2])
     r_port = get_free_port()
-    print("r_port:", r_port)
-    mode = sys.argv[3]
-    req_code = int(sys.argv[4])
+    print("r_port (range 1025-65535):", r_port)
     # create udp socket
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     # negotiation request
@@ -34,7 +39,7 @@ def main():
         # Connect to the server
         server_addr = (server_addr, n_port)
         tcp_sock.connect(server_addr)
-        print(f"Connected to {server_addr}")
+        print("Connected to ", server_addr)
 
         if mode == "p":
             # Passive mode: receive the file from the server
