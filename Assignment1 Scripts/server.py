@@ -3,33 +3,50 @@ import socket
 import os
 
 
+# -*- coding: utf-8 -*-
+
+def get_free_port():
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:  # tcp connection
+        s.bind(('', 0))
+        ip_addr, free_port = s.getsockname()  # return (ip address, port)
+        # print(free_port)
+        return free_port
+
+
+# get_free_port()
 def main():
     # Check command line arguments
     if len(sys.argv) != 3:
-        print(f"Usage: {sys.argv[0]} <req_code> <file_to_send>")
+        print("check number of argument failed")
+        exit(-1)
+    # check req_code be int
+    if not sys.argv[1].isdigit():
+        print("Error: req_code should be an integer.")
         return
-
     req_code = int(sys.argv[1])
+
     file_to_send = sys.argv[2]
+    # udp socket
+    udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     # Create a TCP/IP socket
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    tcp_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     # Bind the socket to a specific port
     server_address = ('', 0)
-    sock.bind(server_address)
+    tcp_sock.bind(server_address)
 
     # Print the port number the server is listening on
-    print(f"Starting up on {sock.getsockname()[1]}")
+    print("Port numer the server is listening on ", tcp_sock.getsockname()[1])
 
     # Listen for incoming connections
-    sock.listen(1)
+    tcp_sock.listen(1)
 
     while True:
         # Wait for a connection
         print('Waiting for a connection...')
-        connection, client_address = sock.accept()
-        print(f"Accepted connection from {client_address}")
+        connection, client_address = tcp_sock.accept()
+        print("Accepted connection from client_address", client_address)
 
         try:
             # Receive the request code from the client
@@ -39,7 +56,7 @@ def main():
                 break
 
             client_req_code = int.from_bytes(data, byteorder='big')
-            print(f"Received request code: {client_req_code}")
+            print("Received request code: client_req_code:", client_req_code)
 
             if client_req_code != req_code:
                 print("Invalid request code")
@@ -51,7 +68,7 @@ def main():
                 file_data = f.read()
                 connection.sendall(file_data)
 
-            print(f"File '{file_to_send}' sent to client")
+            print("File", file_to_send, "sent to client")
 
         finally:
             # Clean up the connection
