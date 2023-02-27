@@ -16,6 +16,7 @@ def get_free_port():
 # get_free_port()
 def main():
     # Check command line arguments
+    global req_code
     if len(sys.argv) != 3:
         print("check number of argument failed")
         exit(-1)
@@ -34,25 +35,31 @@ def main():
     udp_sock.bind(server_address)
 
     # Print the port number the server is listening on
-    print("stage1 Negotiation using udp, <n_port> is:", udp_sock.getsockname()[1])
+    print("stage1 Negotiation using udp, <n_port>:", udp_sock.getsockname()[1])
 
     while True:
         # Wait for a connection
-        print('stage1 Negotiation Server is waiting for a connection...')
-        data, client_address = udp_sock.recvfrom(1024) # max 1024 bytes
+        # print('stage1 Negotiation Server is waiting for a connection...')
+        data, client_address = udp_sock.recvfrom(1024)  # max 1024 bytes
         print("Received data:", data, " from client_address", client_address)
         data = data.decode()
-        data=data.split("|")
-        print("data",data)
-        client_req_code = int(data[1])
-        if (client_req_code == req_code):
-        # register r_port and send 1
-            ack = 1
-            print(ack)
-        else:
-        # send 0
-            ack = 0
-            print(ack)
+        data = data.split("|")
+        print("data", data)
+        client_req_code = int(data[2])
+        if data[0] == "PORT":
+            if client_req_code == req_code:
+                # register r_port and send 1
+                ack = 1
+                r_port = int(data[1])
+                # print(r_port)
+                udp_sock.sendto(str(ack).encode(), client_address)
+            else:
+                # send 0
+                ack = 0
+                #print(ack)
+                udp_sock.sendto(str(ack).encode(), client_address)
+        #elif data[0] == "PASV":
+
         # decode data
         """
          try:
@@ -60,18 +67,18 @@ def main():
                 print("No data received")
                 break
         """
-        #client_req_code = int.from_bytes(data, byteorder='big')
-        #print("Received request code: client_req_code:", client_req_code)
+        # client_req_code = int.from_bytes(data, byteorder='big')
+        # print("Received request code: client_req_code:", client_req_code)
 
-        #stage2
+        # stage2
 
         # Create a TCP/IP socket
-        #tcp_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # tcp_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # Listen for incoming connections
-        #tcp_sock.listen(1)
+        # tcp_sock.listen(1)
 
-        #finally:
-            # Clean up the connection
+        # finally:
+        # Clean up the connection
         #    udp_sock.close()
         #    print("Connection closed\n")
 

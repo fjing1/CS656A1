@@ -35,16 +35,20 @@ def main():
     r_port = get_free_port()
     print("r_port (range 1025-65535):", r_port)
     # create udp socket
-    udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     # depends on the mode:
     if mode == "A":
         # need to send PORT <r_port> <req_code>
-        PORT_msg = "PORT" + str(r_port)+"|" + str(req_code)
+        PORT_msg = "PORT" "|"+ str(r_port)+"|" + str(req_code)
         print(PORT_msg.encode(), (server_addr, n_port))
-        udp_socket.sendto(PORT_msg.encode(), (server_addr, n_port))# default encode is UTF-8
+        udp_sock.sendto(PORT_msg.encode(), (server_addr, n_port))# default encode is UTF-8
 
     elif mode == "P":
         print("P")
+
+    data, client_address = udp_sock.recvfrom(1024)  # max 1024 bytes
+    print("C received data:", data, " from server_addr", client_address)
+    data = data.decode()
     # receive r_port from server
 
     # Create a TCP/IP socket
