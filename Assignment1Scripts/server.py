@@ -36,6 +36,9 @@ def main():
 
     # Print the port number the server is listening on
     print("stage1 Negotiation using udp, <n_port>:", udp_sock.getsockname()[1])
+    #prepare for stage 2
+    # Create a TCP/IP socket
+    s_tcp_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     while True:
         # Wait for a connection
@@ -53,11 +56,28 @@ def main():
                 r_port = int(data[1])
                 # print(r_port)
                 udp_sock.sendto(str(ack).encode(), client_address)
+                # transition stage to r_port of client
+                client_address_t = (client_address[0],r_port)
+                s_tcp_sock.connect(client_address_t)
+                #load the file
+                with open('sent.txt', 'rb') as f:
+                    file_data = f.read()
+                try:
+                    # send the file data
+                    s_tcp_sock.sendall(file_data)
+                finally:
+                    # close the connection
+                    s_tcp_sock.close()
+
+
             else:
                 # send 0
                 ack = 0
                 #print(ack)
                 udp_sock.sendto(str(ack).encode(), client_address)
+
+
+
         #elif data[0] == "PASV":
 
         # decode data
@@ -72,8 +92,7 @@ def main():
 
         # stage2
 
-        # Create a TCP/IP socket
-        # tcp_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
         # Listen for incoming connections
         # tcp_sock.listen(1)
 

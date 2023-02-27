@@ -36,23 +36,44 @@ def main():
     print("r_port (range 1025-65535):", r_port)
     # create udp socket
     udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+    #create the tcp connection now
+    c_tcp_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # depends on the mode:
     if mode == "A":
         # need to send PORT <r_port> <req_code>
-        PORT_msg = "PORT" "|"+ str(r_port)+"|" + str(req_code)
-        print(PORT_msg.encode(), (server_addr, n_port))
-        udp_sock.sendto(PORT_msg.encode(), (server_addr, n_port))# default encode is UTF-8
+        a_msg = "PORT" "|"+ str(r_port)+"|" + str(req_code)
+        print(a_msg.encode(), (server_addr, n_port))
+        udp_sock.sendto(a_msg.encode(), (server_addr, n_port))# default encode is UTF-8
+        data, client_address = udp_sock.recvfrom(1024)  # max 1024 bytes
+        print("C received data:", data, " from server_addr", client_address)
+        data = data.decode()
+        c_tcp_sock.bind(('localhost',n_port ))
+        #needs to listen
+        c_tcp_sock.listen(1)
+        file_data = b''
+        while True:
+            data = c_tcp_sock.recv(1024)
+            if not data:
+                break
+            file_data += data
+
+        with open('received_file.txt', 'wb') as f:
+            f.write(file_data)
+
 
     elif mode == "P":
-        print("P")
+        p_msg = "PASV" "|"+ str(req_code)
+        print(p_msg.encode(), (server_addr, n_port))
+        udp_sock.sendto(p_msg.encode(), (server_addr, n_port))# default encode is UTF-8
+        data, client_address = udp_sock.recvfrom(1024)  # max 1024 bytes
+        print("C received data:", data, " from server_addr", client_address)
+        data = data.decode()
 
-    data, client_address = udp_sock.recvfrom(1024)  # max 1024 bytes
-    print("C received data:", data, " from server_addr", client_address)
-    data = data.decode()
+
+
     # receive r_port from server
 
-    # Create a TCP/IP socket
-    # tcp_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 
 if __name__ == "__main__":
