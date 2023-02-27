@@ -44,21 +44,28 @@ def main():
         # need to send PORT <r_port> <req_code>
         a_msg = "PORT" "|"+ str(r_port)+"|" + str(req_code)
         print(a_msg.encode(), (server_addr, n_port))
+
+        c_tcp_sock.bind(('',r_port))
+        # needs to listen before send
+        c_tcp_sock.listen(1)
+
+        #sending message via udp to server
         udp_sock.sendto(a_msg.encode(), (server_addr, n_port))# default encode is UTF-8
         data, client_address = udp_sock.recvfrom(1024)  # max 1024 bytes
         print("C received data:", data, " from server_addr", client_address)
         data = data.decode()
-        c_tcp_sock.bind(('localhost',n_port ))
-        #needs to listen
-        c_tcp_sock.listen(1)
+
         file_data = b''
         while True:
-            data = c_tcp_sock.recv(1024)
-            if not data:
+            connectionSocket, addr = c_tcp_sock.accept()
+            print("accepted")
+            incoming_data = connectionSocket.recv(1024)
+            print("incoming data",incoming_data)
+            if not incoming_data:
                 break
-            file_data += data
+            file_data += incoming_data
 
-        with open('received_file.txt', 'wb') as f:
+        with open(file_received, 'wb') as f:
             f.write(file_data)
 
 

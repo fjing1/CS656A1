@@ -57,8 +57,8 @@ def main():
                 # print(r_port)
                 udp_sock.sendto(str(ack).encode(), client_address)
                 # transition stage to r_port of client
-                client_address_t = (client_address[0],r_port)
-                s_tcp_sock.connect(client_address_t)
+                print(client_address[0],r_port)
+                s_tcp_sock.connect((client_address[0], r_port))#connect only take one arugment
                 #load the file
                 with open('sent.txt', 'rb') as f:
                     file_data = f.read()
