@@ -4,11 +4,14 @@ import os
 
 
 def get_free_port():
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:  # tcp connection
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
         s.bind(('', 0))
-        ip_addr, free_port = s.getsockname()  # return (ip address, port)
-        # print(free_port)
+        ip_addr, free_port = s.getsockname()
         return free_port
+    #try/finally block to ensure that the socket is always closed, even if an exception is raised:
+    finally:
+        s.close()
 
 
 def main():
@@ -36,29 +39,19 @@ def main():
     tcp_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     try:
-        # Connect to the server
-        server_addr = (server_addr, n_port)
-        tcp_sock.connect(server_addr)
-        print("Connected to ", server_addr)
+        #active mode
+        if mode == "a":
 
-        if mode == "p":
-            # Passive mode: receive the file from the server
-            file_data = tcp_sock.recv(1024)
-            with open('received.txt', 'wb') as f:
-                f.write(file_data)
-            print("File received and saved as 'received.txt'")
+            # Connect to the server
+            tcp_sock.connect((server_addr, n_port))
 
-        elif mode == "a":
-            # Active mode: send the request code to the server and receive the file
-            # converts req_code integer to 4-byte array of bytes in big-endian byte order
+            # Send the PORT request with the port number and request code
+            port_request = f"PORT {r_port} {req_code}"
+            tcp_sock.send(port_request.encode())
 
-            PORT_data = req_code.to_bytes(4, byteorder='big') + r_port.to_bytes(4, byteorder='big')
-            tcp_sock.sendall(PORT_data)
-            # Receive the file from the server
-            file_data = tcp_sock.recv(1024)
-            with open('received.txt', 'wb') as f:
-                f.write(file_data)
-            print("File received and saved as 'received.txt'")
+
+
+
 
     finally:
         # Clean up the socket

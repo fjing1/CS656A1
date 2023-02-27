@@ -27,54 +27,40 @@ def main():
         print("Error:sys.argv[1]/<req_code> must be int")
 
     file_to_send = sys.argv[2]
-    # udp socket
+    # configure udp socket
     udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-    # Create a TCP/IP socket
-    tcp_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
     # Bind the socket to a specific port
     server_address = ('', 0)
-    tcp_sock.bind(server_address)
+    udp_sock.bind(server_address)
 
     # Print the port number the server is listening on
-    print("Port numer the server is listening on ", tcp_sock.getsockname()[1])
-
-    # Listen for incoming connections
-    tcp_sock.listen(1)
+    print("stage1 Negotiation using udp, <n_port> is:", udp_sock.getsockname()[1])
 
     while True:
         # Wait for a connection
-        print('Waiting for a connection...')
-        connection, client_address = tcp_sock.accept()
-        print("Accepted connection from client_address", client_address)
-
-        try:
-            # Receive the request code from the client
-            data = connection.recv(4)
+        print('stage1 Negotiation Server is waiting for a connection...')
+        data, client_address = udp_sock.recvfrom(1024) # max 1024 bytes
+        print("Received data:", data, " from client_address", client_address)
+        """
+         try:
             if not data:
                 print("No data received")
                 break
+        """
+        #client_req_code = int.from_bytes(data, byteorder='big')
+        #print("Received request code: client_req_code:", client_req_code)
 
-            client_req_code = int.from_bytes(data, byteorder='big')
-            print("Received request code: client_req_code:", client_req_code)
+        #stage2
 
-            if client_req_code != req_code:
-                print("Invalid request code")
-                connection.sendall(b"Invalid request code")
-                break
+        # Create a TCP/IP socket
+        #tcp_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # Listen for incoming connections
+        #tcp_sock.listen(1)
 
-            # Send the file to the client
-            with open(file_to_send, 'rb') as f:
-                file_data = f.read()
-                connection.sendall(file_data)
-
-            print("File", file_to_send, "sent to client")
-
-        finally:
+        #finally:
             # Clean up the connection
-            connection.close()
-            print("Connection closed\n")
+        #    udp_sock.close()
+        #    print("Connection closed\n")
 
 
 if __name__ == '__main__':
