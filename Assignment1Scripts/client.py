@@ -42,7 +42,7 @@ def main():
     # depends on the mode:
     if mode == "A":
         # need to send PORT <r_port> <req_code>
-        a_msg = "PORT" "|"+ str(r_port)+"|" + str(req_code)
+        a_msg = "PORT"+" " + str(r_port)+" " + str(req_code)
         print(a_msg.encode(), (server_addr, n_port))
 
         c_tcp_sock.bind(('',r_port))
@@ -56,17 +56,20 @@ def main():
         data = data.decode()
 
         file_data = b''
-        while True:
-            connectionSocket, addr = c_tcp_sock.accept()
-            print("accepted")
-            incoming_data = connectionSocket.recv(1024)
-            print("incoming data",incoming_data)
-            if not incoming_data:
-                break
-            file_data += incoming_data
+        connectionSocket, addr = c_tcp_sock.accept()
+        print("accepted")
+        incoming_data = connectionSocket.recv(1024)
+        print("incoming data",incoming_data)
+        #if not incoming_data:
+        #    break
+        file_data += incoming_data
 
         with open(file_received, 'wb') as f:
             f.write(file_data)
+            f.close()
+
+
+        connectionSocket.close()
 
 
     elif mode == "P":

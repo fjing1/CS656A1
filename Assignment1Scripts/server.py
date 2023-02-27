@@ -18,14 +18,15 @@ def main():
     # Check command line arguments
     global req_code
     if len(sys.argv) != 3:
-        print("check number of argument failed")
+        print("check number of argument failed, req_code followed by file_to_send")
         exit(-1)
     # check req_code be int
     try:
         req_code = int(sys.argv[1])
+        file_to_send = str(sys.argv[2])
         # print("Error: req_code should be an integer.")
     except ValueError:
-        print("Error:sys.argv[1]/<req_code> must be int")
+        print("Error:<req_code>:int, file_to_send:string")
 
     file_to_send = sys.argv[2]
     # configure udp socket
@@ -36,17 +37,18 @@ def main():
 
     # Print the port number the server is listening on
     print("stage1 Negotiation using udp, <n_port>:", udp_sock.getsockname()[1])
-    #prepare for stage 2
-    # Create a TCP/IP socket
-    s_tcp_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     while True:
+        # prepare for stage 2
+        # Create a TCP/IP socket
+        s_tcp_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
         # Wait for a connection
         # print('stage1 Negotiation Server is waiting for a connection...')
         data, client_address = udp_sock.recvfrom(1024)  # max 1024 bytes
         print("Received data:", data, " from client_address", client_address)
         data = data.decode()
-        data = data.split("|")
+        data = data.split(" ")
         print("data", data)
         client_req_code = int(data[2])
         if data[0] == "PORT":
@@ -57,10 +59,10 @@ def main():
                 # print(r_port)
                 udp_sock.sendto(str(ack).encode(), client_address)
                 # transition stage to r_port of client
-                print(client_address[0],r_port)
+                print(client_address[0], r_port)
                 s_tcp_sock.connect((client_address[0], r_port))#connect only take one arugment
-                #load the file
-                with open('sent.txt', 'rb') as f:
+                # load the file to be sent
+                with open(file_to_send, 'rb') as f:
                     file_data = f.read()
                 try:
                     # send the file data
@@ -68,12 +70,10 @@ def main():
                 finally:
                     # close the connection
                     s_tcp_sock.close()
-
-
             else:
                 # send 0
                 ack = 0
-                #print(ack)
+                # print(ack)
                 udp_sock.sendto(str(ack).encode(), client_address)
 
 
