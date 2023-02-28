@@ -26,7 +26,7 @@ def main():
     try:
         server_addr = str(sys.argv[1])
         n_port = int(sys.argv[2])
-        mode = str(sys.argv[3])
+        mode = str(sys.argv[3]).upper()
         req_code = int(sys.argv[4])
         file_received = str(sys.argv[5])
     except ValueError:
@@ -37,53 +37,51 @@ def main():
     # create udp socket
     udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-    #create the tcp connection now
+    # create the tcp connection now
     c_tcp_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # depends on the mode:
-    if mode == "A":
-        # need to send PORT <r_port> <req_code>
-        a_msg = "PORT"+" " + str(r_port)+" " + str(req_code)
+    if mode == "A":  # need to send PORT <r_port> <req_code>
+        a_msg = "PORT" + " " + str(r_port) + " " + str(req_code)
         print(a_msg.encode(), (server_addr, n_port))
-
-        c_tcp_sock.bind(('',r_port))
+        c_tcp_sock.bind(('', r_port))
         # needs to listen before send
         c_tcp_sock.listen(1)
-
-        #sending message via udp to server
-        udp_sock.sendto(a_msg.encode(), (server_addr, n_port))# default encode is UTF-8
+        # sending message via udp to server
+        udp_sock.sendto(a_msg.encode(), (server_addr, n_port))  # default encode is UTF-8
         data, client_address = udp_sock.recvfrom(1024)  # max 1024 bytes
-        print("C received data:", data, " from server_addr", client_address)
+        print("C received:", data, " from server_addr", client_address)
         data = data.decode()
-
         file_data = b''
         connectionSocket, addr = c_tcp_sock.accept()
-        print("accepted")
-        incoming_data = connectionSocket.recv(1024)
-        print("incoming data",incoming_data)
-        #if not incoming_data:
-        #    break
-        file_data += incoming_data
 
+        incoming_data = connectionSocket.recv(1024)
+        print("incoming data", incoming_data)
+        file_data += incoming_data
         with open(file_received, 'wb') as f:
             f.write(file_data)
             f.close()
-
-
         connectionSocket.close()
 
-
     elif mode == "P":
-        p_msg = "PASV" "|"+ str(req_code)
+        p_msg = "PASV" + " " + str(req_code)
         print(p_msg.encode(), (server_addr, n_port))
-        udp_sock.sendto(p_msg.encode(), (server_addr, n_port))# default encode is UTF-8
-        data, client_address = udp_sock.recvfrom(1024)  # max 1024 bytes
-        print("C received data:", data, " from server_addr", client_address)
+        udp_sock.sendto(p_msg.encode(), (server_addr, n_port))
+        data, s_address = udp_sock.recvfrom(1024)  # max 1024 bytes
         data = data.decode()
-
-
-
-    # receive r_port from server
-
+        data = data.split(" ")
+        r_port_server = int(data[1])
+        print("received data:", data, " from", s_address)
+        # need to make a new socket, since c_tcp_socket is already connected
+        c_tcp_sock2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        free_port1 = get_free_port()
+        c_tcp_sock2.bind(('', free_port1))
+        c_tcp_sock2.connect((s_address[0], r_port_server))
+        incoming_data = c_tcp_sock2.recv(1024)
+        print("incoming data:", incoming_data)
+        with open(file_received, 'wb') as f:
+            f.write(incoming_data)
+            f.close()
+        c_tcp_sock2.close()
 
 
 if __name__ == "__main__":
