@@ -9,7 +9,7 @@ def get_free_port():
         s.bind(("", 0))
         ip_addr, free_port = s.getsockname()
         return free_port
-    # try/finally block to ensure that the socket is always closed, even if an exception is raised:
+    # try/finally to ensure that the socket is closed, even an exception is raised:
     finally:
         s.close()
 
@@ -39,12 +39,12 @@ def main():
 
     # create the tcp connection now
     c_tcp_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # depends on the mode:
-    if mode == "A":  # need to send PORT <r_port> <req_code>
+    # depending on the mode:
+    if mode == "A":
+        # need to send PORT <r_port> <req_code>
         a_msg = "PORT" + " " + str(r_port) + " " + str(req_code)
         print(a_msg.encode(), (server_addr, n_port))
         c_tcp_sock.bind(('', r_port))
-        # needs to listen before send
         c_tcp_sock.listen(1)
         # sending message via udp to server
         udp_sock.sendto(a_msg.encode(), (server_addr, n_port))  # default encode is UTF-8

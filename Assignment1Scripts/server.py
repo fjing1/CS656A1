@@ -37,13 +37,12 @@ def main():
 
     # Print the port number the server is listening on
     print("stage1 Negotiation using udp, <n_port>:", udp_sock.getsockname()[1])
-    # prepare for stage 2
-    # Create a TCP/IP socket for A and P
-    s_tcp_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+
     while True:
+        s_tcp_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # Wait for a connection
         data, client_address = udp_sock.recvfrom(1024)  # max 1024 bytes
-        print("Received data:", data, " from client_address", client_address)
         data = data.decode()
         data = data.split(" ")
         if data[0] == "PORT":
@@ -55,7 +54,7 @@ def main():
                 # print(r_port)
                 udp_sock.sendto(str(ack).encode(), client_address)
                 # transition stage to r_port of client
-                print(client_address[0], r_port)
+                # print(client_address[0], r_port)
                 s_tcp_sock.connect((client_address[0], r_port))
                 # load the file to be sent
                 with open(file_to_send, 'rb') as f:
@@ -97,21 +96,11 @@ def main():
                         print("Error occurred while sending data:", e)
                         # handle the error appropriately (e.g., break out of the loop)
                         break
-
                 finally:
                     s_tcp_sock.close()
 
             else:
                 udp_sock.sendto(str(0).encode(), client_address)
-
-        """
-         try:
-            if not data:
-                print("No data received")
-                break
-        """
-        # client_req_code = int.from_bytes(data, byteorder='big')
-        # print("Received request code: client_req_code:", client_req_code)
 
 
 if __name__ == '__main__':
